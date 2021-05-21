@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Your Presentation</title>
+    </head>
+    <body>
+        Messages
+        <ul id="list"></ul>
+        <div id="bullet-screen">
+            <canvas id="bullet-screen-canvas"></canvas>
+        </div>
+    </body>
+    <script>
+
+        let Velocity = 1;
+
+        let canvas = document.getElementById('bullet-screen-canvas');
+        let screen = document.getElementById('bullet-screen');
+
+        var ctx = canvas.getContext("2d");
+        ctx.font = "30px Arial";
+
+        screen.style = `
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+        `
+
+        canvas.style = `
+            width: 150vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, .05);
+            position: absolute;
+            left: 0;
+            top: 0;
+        `;
+
+        function Update(){
+
+            messages.forEach(e => e.update())
+
+            requestAnimationFrame(Update)
+        }
+
+        websocket = new WebSocket("ws://localhost:5555/");
+        
+        let id = null
+
+        websocket.onmessage = function (event) {
+            data = JSON.parse(event.data);
+            if (data.header == "Reg Response"){
+                id = data.data;
+            }else if (data.header == "GET MSG"){
+                addAnother(data.data);
+            }
+        };
+
+        login()
+
+        function login() {
+            setTimeout(() => {
+                try {
+                    websocket.send(JSON.stringify({
+                        "header": "SET TARGET",
+                        "data": "g=8S3r!#2%Hra5dU",
+                        "id": id
+                    }))
+                }catch (e){
+                    alert("Error connecting to server, trying again in 5 seconds");
+                    setTimeout(() => {
+                        login();
+                    }, 5000);
+                }
+            }, 500);
+        }
+
+        function addAnother(msg) {
+            var ul = document.getElementById("list");
+            var li = document.createElement("li");
+            li.style = `color: ${msg['color']}`
+            li.appendChild(document.createTextNode("Element " + msg['msg']));
+            ul.appendChild(li)
+        }
+    </script>
+</html>
