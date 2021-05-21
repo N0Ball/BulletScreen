@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket demo</title>
+    </head>
+    <body>
+        <input type="text" name="Name" id="cliName">
+        <button type="submit" onclick="setName();">Set Name</button>
+        <input type="text" name="Content" id="message">
+        <button type="submit" onclick="sendMsg();">Send Message</button>
+        <div>
+            <h1>Message</h1>
+            <ul id="list"></ul>
+        </div>
+        <script>
+            message = document.getElementById('message');
+            cliName = document.getElementById('cliName');
+
+            websocket = new WebSocket("ws://140.115.30.179:5555/");
+
+            id = '';
+
+            websocket.onmessage = function (event) {
+                data = JSON.parse(event.data);
+                if (data.header == "Reg Response"){
+                    id = data.data;
+                }else if (data.header == "GET MSG"){
+                    addAnother(data["data"]);
+                }
+            }
+
+            function setName(){
+                console.log(cliName.value);
+                websocket.send(JSON.stringify({
+                    "header": "SET NAME",
+                    "id": id,
+                    "data": cliName.value
+                }));
+            }
+
+            function sendMsg(){
+                websocket.send(JSON.stringify({
+                    "header": "SEND MSG",
+                    "id": id,
+                    "data": message.value
+                }))
+            }
+
+            function addAnother(msg) {
+                console.log(msg);
+                var ul = document.getElementById("list");
+                var li = document.createElement("li");
+                li.style = `color: ${msg['color']}`
+                li.appendChild(document.createTextNode(`
+                    ${msg['name']}: ${msg['msg']['data']}
+                `));
+                ul.prepend(li);
+            }
+        </script>
+    </body>
+</html>
